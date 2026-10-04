@@ -1,0 +1,431 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Babak – بابك</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#0b1226;--p:#121a33;--p2:#18213f;--b:#25305a;--t:#e8ecf8;--m:#8d98bd;--a:#6c7bff;--a2:#9b6cff;--ok:#3ecf8e;--w:#f5a524;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:dark}
+@media(prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#f4f6fb;--p:#fff;--p2:#f0f2fa;--b:#d9deef;--t:#141b34;--m:#5d6890;color-scheme:light}}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;background:var(--bg);color:var(--t);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+button,input,textarea,select{font:inherit;color:inherit}h1,h2,h3{margin:0 0 .4em;line-height:1.2}a{color:var(--a)}
+.btn{background:var(--p2);border:1px solid var(--b);padding:8px 14px;border-radius:9px;cursor:pointer}.btn:hover{border-color:var(--a)}
+.pri{background:linear-gradient(135deg,var(--a),var(--a2));border:0;color:#fff;font-weight:600}.sm{padding:4px 10px;font-size:13px}.dng{color:#ff7a7a}
+.card{background:var(--p);border:1px solid var(--b);border-radius:14px;padding:18px}.g{display:grid;gap:14px}.g3{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+input,textarea,select{width:100%;background:var(--p2);border:1px solid var(--b);border-radius:9px;padding:9px 12px;margin:4px 0 12px}label{font-size:13px;color:var(--m)}
+.wrap{max-width:1080px;margin:auto;padding:20px}.nav{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--b)}
+.logo{font-weight:800;font-size:20px;background:linear-gradient(135deg,var(--a),var(--a2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero{text-align:center;padding:70px 20px 40px}.hero h1{font-size:clamp(30px,6vw,54px)}.hero p{color:var(--m);max-width:620px;margin:12px auto 24px}
+.bar{height:7px;background:var(--p2);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--a),var(--a2))}
+.chip{display:inline-block;border:1px solid var(--b);background:var(--p2);padding:6px 12px;border-radius:99px;margin:3px;cursor:pointer}.chip.on{background:var(--a);border-color:var(--a);color:#fff}
+.sel{border-color:var(--a);box-shadow:0 0 0 1px var(--a)}.tag{font-size:12px;color:var(--m)}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.sp{flex:1}
+.app{display:flex;min-height:calc(100vh - 54px)}.side{width:230px;flex:none;border-inline-end:1px solid var(--b);padding:14px;background:var(--p)}
+.side a{display:block;padding:7px 10px;border-radius:8px;color:var(--m);cursor:pointer;text-decoration:none}.side a.on,.side a:hover{background:var(--p2);color:var(--t)}.main{flex:1;min-width:0;padding:20px}
+table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid var(--b);padding:7px 9px;text-align:start;vertical-align:top}th{color:var(--m);font-size:13px}.scroll{overflow-x:auto}
+[contenteditable=true]{outline:1px dashed var(--a);border-radius:4px;min-width:20px;display:inline-block}li{margin:3px 0}
+.ph{border-inline-start:3px solid var(--b);padding:6px 14px;margin:10px 0}.ph.done{border-color:var(--ok)}.ph.doing{border-color:var(--w)}
+.node{background:var(--p2);border:1px solid var(--a);border-radius:10px;padding:10px;text-align:center}.ar{text-align:center;color:var(--a)}
+.modal{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}.modal .card{max-width:640px;width:100%;max-height:85vh;overflow:auto}
+pre{white-space:pre-wrap;background:var(--p2);padding:12px;border-radius:9px;border:1px solid var(--b);font-size:13px}
+@media(max-width:760px){.app{flex-direction:column}.side{width:auto;display:flex;overflow-x:auto;border:0;border-bottom:1px solid var(--b)}.side a{white-space:nowrap}}
+</style></head><body><div id="app"></div><div id="m"></div>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),uid=()=>Math.random().toString(36).slice(2,9);
+/* ---------- Storage + API layer (swap with real backend) ---------- */
+const mem={};const ls={g(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return mem[k]??d}},s(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{mem[k]=v}}};
+const hash=s=>{let h=5381;for(const c of s)h=(h*33)^c.charCodeAt(0);return(h>>>0).toString(36)};
+const api={
+ signup(n,e,p){const u=ls.g('bk_u',{});e=e.trim().toLowerCase();if(!e||p.length<6)throw'Valid email and 6+ char password required';if(u[e])throw'Account exists';u[e]={n,h:hash(e+p)};ls.s('bk_u',u);ls.s('bk_s',e)},
+ login(e,p){const u=ls.g('bk_u',{});e=e.trim().toLowerCase();if(!u[e]||u[e].h!==hash(e+p))throw'Wrong email or password';ls.s('bk_s',e)},
+ me(){const e=ls.g('bk_s',null),u=ls.g('bk_u',{});return e&&u[e]?{e,n:u[e].n||e}:null},logout(){ls.s('bk_s',null)},
+ list(){return ls.g('bk_p_'+S.u.e,[])},save(){ls.s('bk_p_'+S.u.e,S.ps)}};
+/* ---------- Service catalog ---------- */
+const SV=[
+['analysis','🧠','Project Analysis','Understand your idea: problem, users, objectives.','Overview · Problem · Users · Objectives',[],['users','problem','goals']],
+['req','📋','Requirements Analysis','Turn a client request into clear requirements.','Functional · Non-functional · Priorities',[],['users','features','payments','platform']],
+['roles','👥','User & Roles','Identify users and permissions.','Roles · Permissions · Role matrix',[],['users','rolecan']],
+['modules','🧩','Feature & Module Planner','Break the system into modules and features.','Modules · Features · Dependencies',['req'],['features','users']],
+['pages','🖥️','Page Planner','All pages and what each contains.','Page list · Components · Navigation',['modules'],['features','users','platform']],
+['db','🗄️','Database Designer','Tables, fields, relationships, ERD, SQL.','Tables · Relations · ERD · Schema',['req'],['entities','users','payments']],
+['arch','🏗️','System Architecture','Frontend, API, backend, DB, external services.','Layers · Diagram',['req'],['platform','features','scale']],
+['tech','⚙️','Technology Advisor','Recommended stack with reasons.','Frontend · Backend · DB · Hosting',[],['platform','scale','team']],
+['plan','🛣️','Development Planner','Phased step-by-step roadmap.','Phases · Tasks · Order',['modules'],['features','team','timeline']],
+['prompts','✨','AI Prompt Generator','Ready-to-use prompts for AI coding tools.','Context · Requirements · Constraints',[],['task','tech','constraints']],
+['tests','🧪','Testing Generator','Test cases from your requirements.','Scenarios · Edge cases · Expected results',['req'],['features','users']],
+['security','🔐','Security Review','Risks and a security checklist.','Risks · Recommendations · Checklist',[],['users','payments','platform']],
+['docs','📚','Documentation Generator','Technical and user documentation outline.','Docs · API · Install · User guide',[],['features','tech'] ]
+].map(a=>({id:a[0],i:a[1],n:a[2],d:a[3],g:a[4],dep:a[5],q:a[6]}));const svc=id=>SV.find(s=>s.id===id);
+const Q={users:{t:'Who will use this system?',k:'multi',o:['Admin','Manager','Employee','Customer','Guest']},
+rolecan:{t:()=>`What should the ${firstRole()||'Employee'} be able to do?`,k:'text',h:'e.g. take orders, view reports'},
+problem:{t:'What problem are you solving, and for whom?',k:'text'},goals:{t:'What are the main goals of the project?',k:'text'},
+features:{t:'List the main features (comma-separated).',k:'text',h:'Orders, Inventory, Products, Reports'},
+payments:{t:'Does the system require payments?',k:'single',o:['Yes','No','Not sure']},
+platform:{t:'Which platform?',k:'single',o:['Web Application','Mobile App','Web + Mobile','API only']},
+entities:{t:'What are the main data entities? (comma-separated)',k:'text',h:'Products, Orders, Inventory'},
+scale:{t:'Expected scale?',k:'single',o:['Small (<1k users)','Medium','Large (100k+)']},
+team:{t:'Team size & skills?',k:'text',h:'2 devs, React + Node'},timeline:{t:'Target timeline?',k:'single',o:['1 month','3 months','6 months','Flexible']},
+task:{t:'Which development task do you need a prompt for?',k:'text',h:'Create Authentication API'},
+tech:{t:'Preferred technology (or leave blank for suggestions)',k:'text',h:'Node.js, Express, PostgreSQL'},
+constraints:{t:'Any constraints or exclusions?',k:'text'}};
+const firstRole=()=>(S.cur?.ctx.users||[]).find(r=>r!=='Admin');
+/* ---------- Local fallback generator ---------- */
+const L=v=>Array.isArray(v)?v:String(v||'').split(/[,،\n]/).map(x=>x.trim()).filter(Boolean);
+const sing=s=>s.replace(/ies$/i,'y').replace(/s$/i,'');
+function local(id,p){const c=p.ctx,U=L(c.users).length?L(c.users):['Admin','User'],F=L(c.features).length?L(c.features):['Core feature'],E=L(c.entities).length?L(c.entities):F;
+const T=(title,text,copy)=>({type:'text',title,text,copy}),Li=(title,items)=>({type:'list',title,items}),Tb=(title,columns,rows)=>({type:'table',title,columns,rows});
+const S_={
+analysis:[T('Project Overview',`${p.name} is a ${p.type||'software'} project. ${p.desc}`),T('Problem',c.problem||p.goal||'To be refined.'),Li('Target Users',U),Li('Objectives',L(c.goals).length?L(c.goals):[p.goal||'Deliver a working MVP']),Li('Scope',F)],
+req:[Tb('Functional Requirements',['ID','Requirement','Priority'],[['FR-01','User authentication','High'],...F.map((f,i)=>['FR-'+String(i+2).padStart(2,'0'),'Manage '+f,i<3?'High':'Medium'])]),Li('Non-Functional Requirements',['Security: hashed passwords, RBAC, HTTPS','Performance: pages under 2s','Scalability: '+(c.scale||'horizontal scaling ready'),'Availability: 99.5%']),Li('Acceptance Criteria',F.map(f=>f+' can be created, viewed, edited and deleted by authorized roles'))],
+roles:[Tb('Roles & Permissions',['Role',...F],U.map(r=>[r,...F.map(()=>r==='Admin'?'✓':r==='Guest'?'–':'view')])),Li('Role Notes',[firstRole()?firstRole()+': '+(c.rolecan||'to be defined'):'Define role responsibilities'])],
+modules:[Tb('Modules',['Module','Features','Depends on'],[['Auth','Login, roles, sessions','–'],...F.map(f=>[f,'List, create, edit, delete, search','Auth']),['Reports','Summaries & export',F.join(', ')]])],
+pages:[Tb('Pages',['Page','Contains','Roles'],[['Login','Form, errors','All'],['Dashboard','Stats, shortcuts','Staff'],...F.flatMap(f=>[[f+' list','Table, filters, search','Staff'],[f+' form','Fields, validation','Staff']]),['Settings','Profile, preferences','All']])],
+db:[{type:'db',title:'Schema',tables:[{name:'users',fields:['id PK','name','email','role','created_at']},...E.map(e=>({name:e.toLowerCase().replace(/\s+/g,'_'),fields:['id PK','user_id FK','name','status','created_at']}))],relations:E.map(e=>['users',e.toLowerCase().replace(/\s+/g,'_'),'1:N'])}],
+arch:[{type:'flow',title:'Architecture',nodes:[p.type||'Web','Frontend (UI)','API layer (REST)','Backend services','Database','External services'+(/yes/i.test(c.payments)?' (payments)':'')]}],
+tech:[Tb('Recommended Stack',['Layer','Choice','Reason'],[['Frontend','React + Vite','Fast, large ecosystem'],['Backend','Node.js + Express','Same language end-to-end'],['Database','PostgreSQL','Relational, reliable'],['Hosting','Docker on a managed cloud','Portable'],['Auth','JWT + bcrypt','Standard']])],
+plan:[{type:'phases',title:'Roadmap',phases:['Project Setup','Authentication',...F,'Testing','Deployment'].map((n,i)=>({name:n,status:i<1?'done':i<2?'doing':'todo',tasks:['Create database','Create API','Create UI','Testing']}))}],
+prompts:[T('Prompt',`PROJECT CONTEXT\n${p.name}: ${p.desc}\nUsers: ${U.join(', ')}\n\nTASK\n${c.task||'Create Authentication API'}\n\nTECHNOLOGY\n${c.tech||'Node.js, Express, PostgreSQL'}\n\nREQUIREMENTS\n- Follow clean architecture (routes/controllers/services)\n- Validate all input\n\nCONSTRAINTS\n${c.constraints||'None'}\n\nSECURITY RULES\n- Hash passwords, parameterized queries, rate limit login\n\nEXPECTED RESULT\nWorking code, file structure and run instructions.`,true)],
+tests:[Tb('Test Cases',['Scenario','Expected','Type'],[['Login with valid credentials','Access granted','Happy'],['Login with wrong password','Error, no access','Edge'],...F.map(f=>['Create '+sing(f),'Saved & listed','Happy']),...F.map(f=>['Create '+sing(f)+' with empty fields','Validation error','Edge']),['Unauthorized role opens admin page','403 / redirect','Security']])],
+security:[Li('Risks',['Broken access control between roles','SQL injection / XSS','Weak password storage',/yes/i.test(c.payments)?'Payment data exposure (use a PCI provider)':'Sensitive data exposure']),Li('Checklist',['HTTPS everywhere','Hash passwords (bcrypt/argon2)','Enforce RBAC server-side','Rate-limit auth endpoints','Validate & sanitize input','Audit logging','Backups'])],
+docs:[Li('Documentation Outline',['Overview','Installation guide','Configuration','API reference: '+F.join(', '),'User guide per role','Deployment','Troubleshooting'])]}[id];return{sections:S_}}
+/* ---------- AI adapter: Claude via `sample` capability, local fallback ---------- */
+const AI={async gen(id,p,ins){let s=null;try{s=await window.claude?.use('sample')}catch{}
+ if(!s)return{...local(id,p),src:'Local engine'};
+ const prompt=`You are Babak, a software planning assistant. Produce the "${svc(id).n}" deliverable for this project. Write all text values in ${lang==='ar'?'Arabic':'English'} (keep JSON keys and type values in English). Return ONLY JSON: {"sections":[...]} where each section is one of:
+{"type":"text","title":"","text":""} | {"type":"list","title":"","items":[""]} | {"type":"table","title":"","columns":[""],"rows":[[""]]} | {"type":"phases","title":"","phases":[{"name":"","status":"todo","tasks":[""]}]} | {"type":"db","title":"","tables":[{"name":"","fields":["id PK","user_id FK"]}],"relations":[["from_table","to_table","1:N"]]} | {"type":"flow","title":"","nodes":[""]}. Add "copy":true on a text section that is a prompt. Be concrete and specific to the project.
+PROJECT: ${JSON.stringify({name:p.name,type:p.type,desc:p.desc,targetUsers:p.users,goal:p.goal,answers:p.ctx})}
+${p.results&&Object.keys(p.results).length?'EXISTING RESULTS (keep consistent): '+JSON.stringify(Object.fromEntries(Object.entries(p.results).map(([k,v])=>[k,v.sections.map(x=>x.title)]))):''}
+${ins?'USER INSTRUCTION FOR THIS RUN: '+ins:''}`;
+ try{const r=await s.json(prompt,{cache:false});if(r?.sections?.length)return{sections:r.sections,src:'Claude'}}catch(e){}
+ return{...local(id,p),src:'Local engine'}}};
+/* ---------- State ---------- */
+let S={u:api.me(),view:'landing',ps:[],cur:null,sel:[],tab:'overview',edit:false,qid:null,proc:null};
+if(S.u)S.ps=api.list();
+const go=(v,x)=>{Object.assign(S,x||{},{view:v});R();scrollTo(0,0)};
+const prog=p=>p.services.length?Math.round(p.services.filter(s=>p.results[s]).length/p.services.length*100):0;
+const mod=h=>{$('#m').innerHTML=h?`<div class="modal" onclick="if(event.target===this)mod()"><div class="card">${h}</div></div>`:'';tr($('#m'))};
+const toast=t=>mod(`<p>${esc(t)}</p><button class="btn" onclick="mod()">OK</button>`);
+/* ---------- Views ---------- */
+function R(){const a=$('#app');a.innerHTML=({landing:vLanding,auth:vAuth,dash:vDash,wiz:vWiz,pick:vPick,ask:vAsk,ctx:vCtx,proc:vProc,ws:vWs,bp:vBp}[S.view])();document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';tr(a)}
+const nav=(r='')=>`<div class="nav"><span class="logo" style="cursor:pointer" onclick="go(S.u?'dash':'landing')">Babak · بابك</span><span class="row">${r}<button class="btn sm" onclick="setLang()">${lang==='ar'?'English':'العربية'}</button>${S.u?`<span class="tag">${esc(S.u.n)}</span><button class="btn sm" onclick="api.logout();S.u=null;go('landing')">Logout</button>`:''}</span></div>`;
+function vLanding(){return nav(S.u?'':'<button class="btn sm" onclick="authMode=\'login\';go(\'auth\')">Login</button>')+`<div class="hero"><span class="tag">From Client Idea to Development Blueprint</span><h1>Turn Your Idea Into a Development Plan.</h1><p style="font-size:18px">حوّل فكرتك إلى مشروع قابل للتنفيذ.</p><p>Babak helps developers transform client ideas and project requirements into structured plans, architecture, tasks, AI prompts, testing plans and documentation.</p><div class="row" style="justify-content:center"><button class="btn pri" onclick="S.u?go('dash'):(authMode='signup',go('auth'))">Get Started</button><button class="btn" onclick="$('#svs').scrollIntoView({behavior:'smooth'})">Explore Services</button></div></div>
+<div class="wrap"><div class="g g3" style="margin-bottom:30px">${['Choose your service','Answer smart questions','AI processes it','Review & edit','Export blueprint'].map((t,i)=>`<div class="card"><div class="tag">STEP 0${i+1}</div><b>${t}</b></div>`).join('')}</div><h2 id="svs">13 services, pick what you need</h2><div class="g g3">${SV.map(s=>`<div class="card"><div style="font-size:26px">${s.i}</div><b>${s.n}</b><p class="tag">${s.d}</p></div>`).join('')}</div></div>`}
+let authMode='signup';
+function vAuth(){const su=authMode==='signup';return nav()+`<div class="wrap" style="max-width:420px"><div class="card"><h2>${su?'Create Account':'Login'}</h2><div id="err" class="dng"></div>${su?'<label>Name</label><input id="an">':''}<label>Email</label><input id="ae" type="email"><label>Password</label><input id="ap" type="password"><button class="btn pri" style="width:100%" onclick="doAuth()">${su?'Create Account':'Login'}</button><div class="row" style="margin-top:12px"><button class="btn sm" onclick="authMode='${su?'login':'signup'}';R()">${su?'I have an account':'Create account'}</button><button class="btn sm" onclick="toast('Continue with Google and Forgot Password need a server (OAuth / email). The UI hooks are ready in the api layer.')">Continue with Google</button><button class="btn sm" onclick="toast('Password reset needs an email service on the backend.')">Forgot password</button></div></div></div>`}
+function doAuth(){try{const e=$('#ae').value,p=$('#ap').value;authMode==='signup'?api.signup($('#an').value,e,p):api.login(e,p);S.u=api.me();S.ps=api.list();go('dash')}catch(x){$('#err').textContent=lang==='ar'?trs(x):x}}
+function vDash(){return nav()+`<div class="wrap"><div class="row"><div class="sp"><h1>Welcome back 👋</h1><p class="tag">What are you building today?</p></div><button class="btn pri" onclick="newP()">+ New Project</button></div><h2 style="margin-top:20px">My Projects</h2>${S.ps.length?`<div class="g g3">${S.ps.slice().sort((a,b)=>b.upd-a.upd).map(p=>`<div class="card"><b>${esc(p.name)}</b><div class="tag">${esc(p.type||'')}</div><div class="row" style="margin:10px 0"><span class="sp bar"><i style="width:${prog(p)}%"></i></span><span class="tag">${prog(p)}%</span></div><div class="tag">${esc(p.status)} · Updated ${new Date(p.upd).toLocaleDateString()}</div><div class="tag">${p.services.map(s=>svc(s)?.i).join(' ')}</div><div class="row" style="margin-top:10px"><button class="btn sm pri" onclick="openP('${p.id}')">Open Project</button><button class="btn sm dng" onclick="delP('${p.id}')">Delete</button></div></div>`).join('')}</div>`:'<div class="card tag">No projects yet. Create your first one.</div>'}</div>`}
+function newP(){S.cur={id:uid(),name:'',type:'Web Application',desc:'',users:'',goal:'',services:[],ctx:{},results:{},status:'Draft',upd:Date.now()};S.sel=[];go('wiz')}
+function openP(id){S.cur=S.ps.find(p=>p.id===id);S.tab='overview';go(S.cur.services.length&&Object.keys(S.cur.results).length?'ws':'wiz')}
+function delP(id){if(confirm(lang==='ar'?AR['Delete project?']:'Delete project?')){S.ps=S.ps.filter(p=>p.id!==id);api.save();R()}}
+function persist(){S.cur.upd=Date.now();const i=S.ps.findIndex(p=>p.id===S.cur.id);i<0?S.ps.push(S.cur):S.ps[i]=S.cur;api.save()}
+function vWiz(){const p=S.cur;return nav()+`<div class="wrap" style="max-width:640px"><div class="tag">STEP 1 OF 3 · Project Information</div><div class="card"><label>Project Name</label><input id="pn" value="${esc(p.name)}" placeholder="Restaurant Management System"><label>Project Type</label><select id="pt">${['Web Application','Mobile App','SaaS','E-commerce','Internal Tool','API / Backend'].map(o=>`<option value="${o}" ${o===p.type?'selected':''}>${o}</option>`).join('')}</select><label>Short Description</label><textarea id="pd" rows="3" placeholder="I want to build a system to manage orders, inventory, employees and reports.">${esc(p.desc)}</textarea><label>Target Users</label><input id="pu" value="${esc(p.users)}"><label>Project Goal</label><input id="pg" value="${esc(p.goal)}"><button class="btn pri" onclick="saveW()">Continue</button></div></div>`}
+function saveW(){const p=S.cur;p.name=$('#pn').value.trim();p.type=$('#pt').value;p.desc=$('#pd').value.trim();p.users=$('#pu').value;p.goal=$('#pg').value;if(!p.name||!p.desc)return toast('Project name and description are required.');persist();S.sel=p.services.slice();go('pick',{adding:false})}
+function vPick(){const m=S.sel.map(id=>svc(id)).flatMap(s=>s.dep).filter((d,i,a)=>!S.sel.includes(d)&&!S.cur.services.includes(d)&&a.indexOf(d)===i);
+return nav()+`<div class="wrap"><div class="tag">STEP 2 OF 3</div><h2>What do you need help with?</h2><div class="row" style="align-items:flex-start"><div class="sp g g3">${SV.filter(s=>!S.adding||!S.cur.services.includes(s.id)).map(s=>`<div class="card ${S.sel.includes(s.id)?'sel':''}"><div style="font-size:24px">${s.i}</div><b>${s.n}</b><p class="tag">${s.d}</p><div class="tag"><b>You will get:</b> ${s.g}</div><button class="btn sm ${S.sel.includes(s.id)?'pri':''}" onclick="tog('${s.id}')">${S.sel.includes(s.id)?'Selected ✓':'Select'}</button></div>`).join('')}</div>
+<div class="card" style="position:sticky;top:10px;min-width:230px"><b>Selected Services</b><div>${S.sel.length} selected</div><div class="tag">Estimated processing: Ready</div>${m.length?`<div class="card" style="margin:10px 0;border-color:var(--w)"><b>Recommended</b><p class="tag">Works better with ${m.map(d=>svc(d).n).join(', ')}. You can continue without it.</p><button class="btn sm" onclick="S.sel.push(...${JSON.stringify(m)});R()">Add</button></div>`:''}<button class="btn pri" style="width:100%" onclick="S.sel.length?startQ():toast('Select at least one service.')">Continue</button></div></div></div>`}
+const tog=id=>{S.sel=S.sel.includes(id)?S.sel.filter(x=>x!==id):[...S.sel,id];R()};
+function qIds(){return[...new Set(S.sel.flatMap(id=>svc(id).q))]}
+function nextQ(){const a=S.cur.ctx;return qIds().find(q=>!(q in a)&&!(q==='rolecan'&&!firstRole()))}
+function startQ(){const p=S.cur;p.services=[...new Set([...p.services,...S.sel])];persist();S.pending=S.sel.filter(id=>!p.results[id]);nq()}
+function nq(){const q=nextQ();q?go('ask',{qid:q}):go('ctx')}
+function vAsk(){const q=Q[S.qid],t=typeof q.t==='function'?q.t():q.t,all=qIds().filter(x=>!(x==='rolecan'&&!firstRole())),i=all.indexOf(S.qid)+1,v=S.cur.ctx[S.qid];
+return nav()+`<div class="wrap" style="max-width:640px"><div class="tag">STEP 3 OF 3 · Question ${String(i).padStart(2,'0')} of ${all.length}</div><div class="bar" style="margin:8px 0"><i style="width:${i/all.length*100}%"></i></div><div class="card"><h2>${esc(t)}</h2>${q.k==='text'?`<textarea id="qa" rows="3" placeholder="${esc(q.h||'')}"></textarea>`:`<div id="qo">${q.o.map(o=>`<span class="chip" data-v="${o}" onclick="${q.k==='multi'?"this.classList.toggle('on')":"document.querySelectorAll('#qo .chip').forEach(c=>c.classList.remove('on'));this.classList.add('on')"}">${o}</span>`).join('')}</div>${q.k==='multi'?'<input id="qx" placeholder="Other roles (comma-separated)">':''}`}<div class="row" style="margin-top:12px"><button class="btn" onclick="skipQ()">Skip</button><button class="btn pri" onclick="ansQ()">Next</button></div></div></div>`}
+function ansQ(){const q=Q[S.qid];let v;if(q.k==='text')v=$('#qa').value.trim();else{v=[...document.querySelectorAll('#qo .chip.on')].map(c=>c.dataset.v);if(q.k==='multi')v=[...v,...L($('#qx').value)];else v=v[0]||''}
+S.cur.ctx[S.qid]=v;persist();nq()}
+const skipQ=()=>{S.cur.ctx[S.qid]=Q[S.qid].k==='multi'?[]:'';nq()};
+function vCtx(){const p=S.cur,c=p.ctx,row=(k,v)=>v&&v.length?`<tr><th>${k}</th><td>${esc(Array.isArray(v)?v.join(', '):v)}</td></tr>`:'';
+return nav()+`<div class="wrap" style="max-width:700px"><h2>Project Context</h2><div class="card"><table>${row('Project',p.name)}${row('Goal',p.goal||c.goals)}${row('Users',c.users||p.users)}${row('Main Features',c.features)}${row('Entities',c.entities)}${row('Platform',c.platform||p.type)}${row('Payments',c.payments)}${row('Problem',c.problem)}${row('Tech / Team',[c.tech,c.team].filter(Boolean).join(' · '))}${row('Selected services',p.services.map(s=>svc(s).n).join(', '))}</table></div><p>Is this information correct?</p><div class="row"><button class="btn" onclick="S.cur.ctx={};go('pick')">Edit (re-answer)</button><button class="btn pri" onclick="process()">Confirm & Continue</button></div></div>`}
+async function process(ins){const p=S.cur,todo=S.pending?.length?S.pending:p.services.filter(s=>!p.results[s]);S.proc={todo,done:[],cur:null};go('proc');
+ for(const id of todo){S.proc.cur=id;R();p.results[id]=await AI.gen(id,p,'');S.proc.done.push(id);p.status='In progress';persist()}
+ S.proc.cur=null;S.pending=[];S.tab=todo[0]||'overview';go('ws')}
+function vProc(){const P=S.proc;return nav()+`<div class="wrap" style="max-width:520px"><div class="card"><h2>Analyzing your project...</h2>${P.todo.map(id=>`<div>${P.done.includes(id)?'<span style="color:var(--ok)">✓</span>':P.cur===id?'◉':'○'} ${svc(id).n}</div>`).join('')}<div class="bar" style="margin-top:14px"><i style="width:${P.done.length/P.todo.length*100}%"></i></div></div></div>`}
+function sideNav(p){return`<div class="side"><b>${esc(p.name)}</b><div class="bar" style="margin:6px 0 10px"><i style="width:${prog(p)}%"></i></div><a class="${S.tab==='overview'?'on':''}" onclick="S.tab='overview';R()">Overview</a>${p.services.map(id=>`<a class="${S.tab===id?'on':''}" onclick="S.tab='${id}';S.edit=false;R()">${svc(id).i} ${svc(id).n}</a>`).join('')}<a onclick="S.sel=[];S.adding=true;go('pick')" style="color:var(--a)">+ Add Service</a><a onclick="go('bp')" style="color:var(--ok)">★ Final Blueprint</a><a onclick="go('dash')">← Dashboard</a></div>`}
+function vWs(){const p=S.cur;let body;if(S.tab==='overview'||!svc(S.tab))body=`<h2>${esc(p.name)}</h2><p>${esc(p.desc)}</p><div class="g g3">${p.services.map(id=>`<div class="card"><b>${svc(id).i} ${svc(id).n}</b><div class="tag">${p.results[id]?'Ready · '+p.results[id].src:'Not generated'}</div><button class="btn sm" onclick="S.tab='${id}';R()">Open</button></div>`).join('')}</div>`;
+else{const r=p.results[S.tab],s=svc(S.tab);body=r?`<div class="row"><h2 class="sp">${s.i} ${s.n}</h2><span class="tag">${r.src}</span><button class="btn sm" onclick="S.edit=!S.edit;R()">${S.edit?'Done editing':'Edit'}</button><button class="btn sm" onclick="regen('${S.tab}')">Regenerate</button><button class="btn sm" onclick="exportMd(['${S.tab}'])">Export</button></div>${r.sections.map((x,i)=>sec(x,i,S.tab,S.edit)).join('')}`:`<div class="card">Not generated yet.<br><button class="btn pri" onclick="regen('${S.tab}')">Generate</button></div>`}
+return nav()+`<div class="app">${sideNav(p)}<div class="main">${body}</div></div>`}
+/* ---------- Result renderer + editing ---------- */
+const ce=(e,a)=>`<span ${e?`contenteditable="true" data-p="${a}"`:''}>`;
+function sec(x,i,s,e){const A=`${s}|${i}`,h=`<h3>${esc(x.title||'')}</h3>`;let b='';
+ if(x.type==='text')b=`${ce(e,A+'|text')}${esc(x.text).replace(/\n/g,'<br>')}</span>`.replace(/^(.*)$/s,x.copy?'<pre>$1</pre>':'<p>$1</p>')+(x.copy?`<button class="btn sm" onclick="cp(${i})">Copy Prompt</button>`:'');
+ else if(x.type==='list')b=`<ul>${x.items.map((t,j)=>`<li>${ce(e,A+'|items|'+j)}${esc(t)}</span>${e?` <button class="btn sm dng" data-a="del" data-p="${A}|items|${j}">×</button>`:''}</li>`).join('')}</ul>${e?`<button class="btn sm" data-a="add" data-p="${A}|items">+ Add</button>`:''}`;
+ else if(x.type==='table')b=`<div class="scroll"><table><tr>${x.columns.map(c=>`<th>${esc(c)}</th>`).join('')}${e?'<th></th>':''}</tr>${x.rows.map((r,j)=>`<tr>${r.map((c,k)=>`<td>${ce(e,`${A}|rows|${j}|${k}`)}${esc(c)}</span></td>`).join('')}${e?`<td><button class="btn sm dng" data-a="del" data-p="${A}|rows|${j}">×</button></td>`:''}</tr>`).join('')}</table></div>${e?`<button class="btn sm" data-a="add" data-p="${A}|rows">+ Add row</button>`:''}`;
+ else if(x.type==='phases')b=x.phases.map((ph,j)=>`<div class="ph ${ph.status}"><b>PHASE ${String(j+1).padStart(2,'0')}</b> ${ce(e,`${A}|phases|${j}|name`)}${esc(ph.name)}</span> <span class="chip" data-a="st" data-p="${A}|phases|${j}">${ph.status==='done'?'✓ done':ph.status==='doing'?'◉ in progress':'○ todo'}</span>${(ph.tasks||[]).map((t,k)=>`<div class="tag">Task ${String(k+1).padStart(2,'0')} · ${ce(e,`${A}|phases|${j}|tasks|${k}`)}${esc(t)}</span></div>`).join('')}</div>`).join('');
+ else if(x.type==='db')b=erd(x)+`<div class="g g3">${x.tables.map((t,j)=>`<div class="card"><b>${ce(e,`${A}|tables|${j}|name`)}${esc(t.name)}</span></b><div class="tag">${t.fields.map(f=>esc(f)).join('<br>')}</div></div>`).join('')}</div><button class="btn sm" style="margin-top:8px" onclick="sql(${i})">Generate SQL</button>`;
+ else if(x.type==='flow')b=x.nodes.map((n,j)=>(j?'<div class="ar">↓</div>':'')+`<div class="node">${ce(e,`${A}|nodes|${j}`)}${esc(n)}</span></div>`).join('');
+ return`<div class="card" style="margin:12px 0">${h}${b}</div>`}
+function erd(x){const W=150,pos={};const rows=Math.ceil(x.tables.length/3);const H=n=>26+Math.min(n,6)*15;let svg='',lines='';
+ x.tables.forEach((t,i)=>{const cx=(i%3)*200+10,cy=Math.floor(i/3)*140+10;pos[t.name]=[cx+W/2,cy+H(t.fields.length)/2];svg+=`<g><rect x="${cx}" y="${cy}" width="${W}" height="${H(t.fields.length)}" rx="8" fill="var(--p2)" stroke="var(--a)"/><text x="${cx+8}" y="${cy+17}" fill="var(--t)" font-weight="700" font-size="12">${esc(t.name)}</text>${t.fields.slice(0,6).map((f,k)=>`<text x="${cx+8}" y="${cy+34+k*15}" fill="var(--m)" font-size="10">${esc(f)}</text>`).join('')}</g>`});
+ (x.relations||[]).forEach(r=>{const a=pos[r[0]],b=pos[r[1]];if(a&&b)lines+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="var(--m)" stroke-dasharray="4"/>`});
+ return`<div class="scroll"><svg viewBox="0 0 620 ${rows*140+10}" width="100%" style="min-width:560px;max-height:520px">${lines}${svg}</svg></div>`}
+const cur=()=>S.cur.results;
+function path(el){const q=el.dataset.p.split('|');const s=q[0],i=+q[1];let o=cur()[s].sections[i];const rest=q.slice(2);return{o,rest}}
+function walk(o,rest){for(let k=0;k<rest.length-1;k++)o=o[rest[k]];return[o,rest[rest.length-1]]}
+document.addEventListener('focusout',e=>{const el=e.target;if(el.contentEditable==='true'&&el.dataset.p){const{o,rest}=path(el),[t,k]=walk(o,rest);t[k]=el.textContent;persist()}});
+document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el)return;const{o,rest}=path(el),a=el.dataset.a;
+ if(a==='st'){const[pt,pk]=walk(o,rest),ph=pt[pk];ph.status={todo:'doing',doing:'done',done:'todo'}[ph.status];}
+ else if(a==='del'){const[t,k]=walk(o,rest);t.splice(+k,1)}
+ else if(a==='add'){const t=rest.reduce((x,k)=>x[k],o);t.push(rest[0]==='rows'?o.columns.map(()=> 'New'):'New item')}
+ persist();R()});
+const cp=i=>{navigator.clipboard?.writeText(cur()[S.tab].sections[i].text).then(()=>toast('Copied.'),()=>toast('Select the text and copy manually.'))};
+function sql(i){const d=cur()[S.tab].sections[i];const out=d.tables.map(t=>`CREATE TABLE ${t.name} (\n${t.fields.map(f=>{const[n,...r]=f.split(' ');const k=r.join(' ');return`  ${n} ${/PK/.test(k)?'SERIAL PRIMARY KEY':/FK/.test(k)||/_id$/.test(n)?'INTEGER':/_at$/.test(n)?'TIMESTAMP DEFAULT now()':'VARCHAR(255)'}`}).join(',\n')}\n);`).join('\n\n');mod(`<h3>SQL Schema</h3><pre>${esc(out)}</pre><button class="btn" onclick="mod()">Close</button>`)}
+/* ---------- Regenerate ---------- */
+function regen(id){mod(`<h3>Why do you want to regenerate?</h3><div id="rr">${['The result is incorrect','Missing information','I want a simpler solution','I want a more advanced solution','Change technology'].map(r=>`<span class="chip" onclick="this.classList.toggle('on')">${r}</span>`).join('')}</div><label>Custom instruction</label><textarea id="ri" rows="2" placeholder="Use PostgreSQL instead of MySQL."></textarea><div class="row"><button class="btn" onclick="mod()">Cancel</button><button class="btn pri" onclick="doRegen('${id}')">Regenerate</button></div>`)}
+async function doRegen(id){const why=[...document.querySelectorAll('#rr .chip.on')].map(c=>c.textContent).join('; '),t=$('#ri').value;mod(`<p>Regenerating ${svc(id).n}...</p>`);
+ const p=S.cur,old=p.results[id];delete p.results[id];const ins=[why,t].filter(Boolean).join('. ');if(t&&/tech|postgres|mysql|use /i.test(t))p.ctx.tech=t;
+ p.results[id]=await AI.gen(id,p,ins);if(old&&p.results[id].src==='Local engine'&&ins)p.results[id].sections.push({type:'text',title:'Instruction noted',text:ins});persist();mod();R()}
+/* ---------- Blueprint + export ---------- */
+function vBp(){const p=S.cur;p.status='Blueprint ready';persist();return nav()+`<div class="wrap"><h1>Your Project Blueprint is Ready 🎉</h1><div class="card"><b>${esc(p.name)}</b><div>${p.services.map(id=>`<div>${p.results[id]?'✓':'○'} ${svc(id).n}</div>`).join('')}</div></div><div class="row" style="margin:14px 0"><button class="btn pri" onclick="exportMd(null)">Markdown</button><button class="btn" onclick="exportJson()">JSON</button><button class="btn" onclick="exportDoc()">Word</button><button class="btn" onclick="exportSum()">Project Summary</button><button class="btn" onclick="window.print()">PDF (print)</button><button class="btn" onclick="go('ws')">Back to workspace</button></div>${p.services.filter(id=>p.results[id]).map(id=>`<h2>${svc(id).i} ${svc(id).n}</h2>${p.results[id].sections.map((x,i)=>sec(x,i,id,false)).join('')}`).join('')}</div>`}
+function toMd(ids){const p=S.cur;return`# ${p.name}\n\n${p.desc}\n\n`+(ids||p.services).filter(id=>p.results[id]).map(id=>`## ${svc(id).n}\n\n`+p.results[id].sections.map(x=>`### ${x.title||''}\n\n`+(x.type==='text'?x.text:x.type==='list'?x.items.map(i=>'- '+i).join('\n'):x.type==='table'?`| ${x.columns.join(' | ')} |\n|${x.columns.map(()=>'---').join('|')}|\n`+x.rows.map(r=>`| ${r.join(' | ')} |`).join('\n'):x.type==='phases'?x.phases.map((f,i)=>`**Phase ${i+1}: ${f.name}** (${f.status})\n`+(f.tasks||[]).map(t=>'- '+t).join('\n')).join('\n\n'):x.type==='db'?x.tables.map(t=>`**${t.name}**: ${t.fields.join(', ')}`).join('\n')+'\n\nRelations: '+(x.relations||[]).map(r=>r.join(' ')).join('; '):x.nodes.join(' → '))).join('\n\n')).join('\n\n')}
+async function save(name,data,type){let d=null;try{d=await window.claude?.use('downloads')}catch{}
+ if(d){try{return await d.save({filename:name,data:new Blob([data],{type})})}catch(e){}}
+ mod(`<h3>${esc(name)}</h3><p class="tag">Direct download isn't available here. Copy the content below.</p><pre style="max-height:50vh;overflow:auto">${esc(data)}</pre><button class="btn" onclick="mod()">Close</button>`)}
+const slug=()=>S.cur.name.replace(/\W+/g,'-').toLowerCase()||'blueprint';
+const exportMd=ids=>save(slug()+'.md',toMd(ids),'text/markdown'),exportJson=()=>save(slug()+'.json',JSON.stringify(S.cur,null,2),'application/json'),
+exportSum=()=>save(slug()+'-summary.md',`# ${S.cur.name}\n\n${S.cur.desc}\n\nGoal: ${S.cur.goal}\nServices: ${S.cur.services.map(s=>svc(s).n).join(', ')}\nProgress: ${prog(S.cur)}%\n`,'text/markdown'),
+exportDoc=()=>save(slug()+'.doc',`<html><body><pre style="font-family:Calibri;white-space:pre-wrap">${esc(toMd(null))}</pre></body></html>`,'application/msword');
+/* ---------- i18n (EN / AR) ---------- */
+let lang=ls.g('bk_l',(navigator.language||'').startsWith('ar')?'ar':'en');
+const AR=Object.fromEntries(`Login|تسجيل الدخول
+Logout|تسجيل الخروج
+From Client Idea to Development Blueprint|من فكرة العميل إلى مخطط التطوير
+Turn Your Idea Into a Development Plan.|حوّل فكرتك إلى مشروع قابل للتنفيذ.
+حوّل فكرتك إلى مشروع قابل للتنفيذ.|Turn Your Idea Into a Development Plan.
+Babak helps developers transform client ideas and project requirements into structured plans, architecture, tasks, AI prompts, testing plans and documentation.|يساعد بابك المطورين على تحويل أفكار العملاء ومتطلبات المشاريع إلى خطط منظمة ومعمارية ومهام وأوامر ذكاء اصطناعي وخطط اختبار وتوثيق.
+Get Started|ابدأ الآن
+Explore Services|استكشف الخدمات
+Choose your service|اختر خدمتك
+Answer smart questions|أجب عن أسئلة ذكية
+AI processes it|يعالجها الذكاء الاصطناعي
+Review & edit|راجع وعدّل
+Export blueprint|صدّر المخطط
+13 services, pick what you need|13 خدمة، اختر ما تحتاجه
+Create Account|إنشاء حساب
+Create account|إنشاء حساب
+Name|الاسم
+Email|البريد الإلكتروني
+Password|كلمة المرور
+I have an account|لدي حساب
+Continue with Google|المتابعة عبر Google
+Forgot password|نسيت كلمة المرور
+Valid email and 6+ char password required|أدخل بريداً صحيحاً وكلمة مرور من 6 أحرف أو أكثر
+Account exists|الحساب موجود مسبقاً
+Wrong email or password|البريد أو كلمة المرور غير صحيحة
+Continue with Google and Forgot Password need a server (OAuth / email). The UI hooks are ready in the api layer.|المتابعة عبر Google واستعادة كلمة المرور تحتاجان إلى خادم (OAuth / بريد). نقاط الربط جاهزة في طبقة api.
+Password reset needs an email service on the backend.|استعادة كلمة المرور تحتاج إلى خدمة بريد في الخلفية.
+Welcome back 👋|أهلاً بعودتك 👋
+What are you building today?|ماذا تبني اليوم؟
++ New Project|+ مشروع جديد
+My Projects|مشاريعي
+No projects yet. Create your first one.|لا توجد مشاريع بعد. أنشئ مشروعك الأول.
+Open Project|فتح المشروع
+Delete|حذف
+Delete project?|حذف المشروع؟
+Project Information|معلومات المشروع
+Project Name|اسم المشروع
+Project Type|نوع المشروع
+Short Description|وصف مختصر
+Target Users|المستخدمون المستهدفون
+Project Goal|هدف المشروع
+Continue|متابعة
+Web Application|تطبيق ويب
+Mobile App|تطبيق جوال
+SaaS|برمجيات كخدمة (SaaS)
+E-commerce|تجارة إلكترونية
+Internal Tool|أداة داخلية
+API / Backend|واجهة برمجية / خلفية
+Project name and description are required.|اسم المشروع ووصفه مطلوبان.
+Restaurant Management System|نظام إدارة مطعم
+I want to build a system to manage orders, inventory, employees and reports.|أريد بناء نظام لإدارة الطلبات والمخزون والموظفين والتقارير.
+What do you need help with?|بماذا تحتاج المساعدة؟
+You will get:|ستحصل على:
+Select|اختيار
+Selected ✓|تم الاختيار ✓
+Selected Services|الخدمات المختارة
+Estimated processing: Ready|وقت المعالجة المتوقع: جاهز
+Recommended|موصى به
+Add|إضافة
+Select at least one service.|اختر خدمة واحدة على الأقل.
+Next|التالي
+Skip|تخطي
+Other roles (comma-separated)|أدوار أخرى (مفصولة بفواصل)
+Admin|مدير النظام
+Manager|مدير
+Employee|موظف
+Customer|عميل
+Guest|زائر
+Who will use this system?|من سيستخدم هذا النظام؟
+What problem are you solving, and for whom?|ما المشكلة التي تحلها ولمن؟
+What are the main goals of the project?|ما الأهداف الرئيسية للمشروع؟
+List the main features (comma-separated).|اذكر الميزات الرئيسية (مفصولة بفواصل).
+Does the system require payments?|هل يحتاج النظام إلى مدفوعات؟
+Which platform?|أي منصة؟
+What are the main data entities? (comma-separated)|ما كيانات البيانات الرئيسية؟ (مفصولة بفواصل)
+Expected scale?|ما الحجم المتوقع؟
+Team size & skills?|حجم الفريق ومهاراته؟
+Target timeline?|المدة المستهدفة؟
+Which development task do you need a prompt for?|لأي مهمة تطوير تحتاج Prompt؟
+Preferred technology (or leave blank for suggestions)|التقنية المفضلة (أو اتركها فارغة لاقتراحات)
+Any constraints or exclusions?|هل توجد قيود أو استثناءات؟
+Yes|نعم
+No|لا
+Not sure|لست متأكداً
+Web + Mobile|ويب + جوال
+API only|واجهة برمجية فقط
+Small (<1k users)|صغير (أقل من 1000 مستخدم)
+Medium|متوسط
+Large (100k+)|كبير (أكثر من 100 ألف)
+1 month|شهر واحد
+3 months|3 أشهر
+6 months|6 أشهر
+Flexible|مرن
+Project Context|سياق المشروع
+Project|المشروع
+Goal|الهدف
+Users|المستخدمون
+Main Features|الميزات الرئيسية
+Entities|الكيانات
+Platform|المنصة
+Payments|المدفوعات
+Problem|المشكلة
+Tech / Team|التقنية / الفريق
+Selected services|الخدمات المختارة
+Is this information correct?|هل هذه المعلومات صحيحة؟
+Edit (re-answer)|تعديل (إعادة الإجابة)
+Confirm & Continue|تأكيد ومتابعة
+Analyzing your project...|جارٍ تحليل مشروعك...
+Overview|نظرة عامة
++ Add Service|+ إضافة خدمة
+★ Final Blueprint|★ المخطط النهائي
+← Dashboard|→ لوحة التحكم
+Open|فتح
+Not generated|لم يتم التوليد
+Not generated yet.|لم يتم التوليد بعد.
+Generate|توليد
+Edit|تعديل
+Done editing|تم التعديل
+Regenerate|إعادة التوليد
+Export|تصدير
+Copy Prompt|نسخ الـ Prompt
+Generate SQL|توليد SQL
++ Add|+ إضافة
++ Add row|+ إضافة صف
+Back to workspace|العودة لمساحة العمل
+Project Summary|ملخص المشروع
+PDF (print)|PDF (طباعة)
+Why do you want to regenerate?|لماذا تريد إعادة التوليد؟
+The result is incorrect|النتيجة غير صحيحة
+Missing information|معلومات ناقصة
+I want a simpler solution|أريد حلاً أبسط
+I want a more advanced solution|أريد حلاً أكثر تقدماً
+Change technology|تغيير التقنية
+Custom instruction|تعليمات مخصصة
+Cancel|إلغاء
+Use PostgreSQL instead of MySQL.|استخدم PostgreSQL بدلاً من MySQL.
+OK|حسناً
+Copied.|تم النسخ.
+Select the text and copy manually.|حدد النص وانسخه يدوياً.
+SQL Schema|مخطط SQL
+Close|إغلاق
+Direct download isn't available here. Copy the content below.|التنزيل المباشر غير متاح هنا. انسخ المحتوى أدناه.
+Instruction noted|تم تسجيل التعليمات
+Your Project Blueprint is Ready 🎉|مخطط مشروعك جاهز 🎉
+Draft|مسودة
+In progress|قيد التنفيذ
+Blueprint ready|المخطط جاهز
+✓ done|✓ مكتمل
+◉ in progress|◉ قيد التنفيذ
+○ todo|○ لم يبدأ
+Local engine|محرك محلي
+Project Overview|نظرة عامة على المشروع
+Scope|النطاق
+Functional Requirements|المتطلبات الوظيفية
+Non-Functional Requirements|المتطلبات غير الوظيفية
+Acceptance Criteria|معايير القبول
+Roles & Permissions|الأدوار والصلاحيات
+Role Notes|ملاحظات الأدوار
+Modules|الوحدات
+Pages|الصفحات
+Schema|المخطط
+Architecture|المعمارية
+Recommended Stack|التقنيات الموصى بها
+Roadmap|خارطة الطريق
+Prompt|Prompt
+Test Cases|حالات الاختبار
+Risks|المخاطر
+Checklist|قائمة التحقق
+Documentation Outline|هيكل التوثيق
+Objectives|الأهداف
+Requirement|المتطلب
+Priority|الأولوية
+Role|الدور
+Module|الوحدة
+Features|الميزات
+Depends on|يعتمد على
+Page|الصفحة
+Contains|المحتوى
+Layer|الطبقة
+Choice|الاختيار
+Reason|السبب
+Scenario|السيناريو
+Expected|المتوقع
+Type|النوع
+Project Analysis|تحليل المشروع
+Understand your idea: problem, users, objectives.|افهم فكرتك: المشكلة والمستخدمون والأهداف.
+Requirements Analysis|تحليل المتطلبات
+Turn a client request into clear requirements.|حوّل طلب العميل إلى متطلبات واضحة.
+User & Roles|المستخدمون والأدوار
+Identify users and permissions.|حدد المستخدمين وصلاحياتهم.
+Feature & Module Planner|مخطط الميزات والوحدات
+Break the system into modules and features.|قسّم النظام إلى وحدات وميزات.
+Page Planner|مخطط الصفحات
+All pages and what each contains.|كل الصفحات وما تحتويه.
+Database Designer|مصمم قاعدة البيانات
+Tables, fields, relationships, ERD, SQL.|جداول وحقول وعلاقات وERD وSQL.
+System Architecture|معمارية النظام
+Frontend, API, backend, DB, external services.|الواجهة وAPI والخلفية وقاعدة البيانات والخدمات الخارجية.
+Technology Advisor|مستشار التقنيات
+Recommended stack with reasons.|تقنيات موصى بها مع الأسباب.
+Development Planner|مخطط التطوير
+Phased step-by-step roadmap.|خارطة طريق مرحلية خطوة بخطوة.
+AI Prompt Generator|مولّد AI Prompts
+Ready-to-use prompts for AI coding tools.|أوامر جاهزة لأدوات البرمجة بالذكاء الاصطناعي.
+Testing Generator|مولّد الاختبارات
+Test cases from your requirements.|حالات اختبار من متطلباتك.
+Security Review|مراجعة الأمان
+Risks and a security checklist.|المخاطر وقائمة تحقق أمنية.
+Documentation Generator|مولّد التوثيق
+Technical and user documentation outline.|هيكل التوثيق التقني وتوثيق المستخدم.
+Problem|المشكلة
+Functional|وظيفية
+Non-functional|غير وظيفية
+Priorities|الأولويات
+Roles|الأدوار
+Permissions|الصلاحيات
+Role matrix|مصفوفة الأدوار
+Dependencies|الاعتماديات
+Page list|قائمة الصفحات
+Components|المكونات
+Navigation|التنقل
+Tables|الجداول
+Relations|العلاقات
+Layers|الطبقات
+Diagram|مخطط
+Frontend|الواجهة الأمامية
+Backend|الخلفية
+DB|قاعدة البيانات
+Hosting|الاستضافة
+Phases|المراحل
+Tasks|المهام
+Order|الترتيب
+Context|السياق
+Requirements|المتطلبات
+Constraints|القيود
+Scenarios|السيناريوهات
+Edge cases|الحالات الحدية
+Expected results|النتائج المتوقعة
+Recommendations|التوصيات
+Docs|التوثيق
+Install|التثبيت
+User guide|دليل المستخدم`.split('\n').map(l=>{const i=l.indexOf('|');return[l.slice(0,i),l.slice(i+1)]}));
+const RX=[[/^STEP (\d) OF 3(?: · (.+))?$/,(m,a,b)=>`الخطوة ${a} من 3`+(b?' · '+trs(b):'')],[/^STEP 0(\d)$/,'الخطوة 0$1'],[/^Question (\d+) of (\d+)$/,'السؤال $1 من $2'],[/^(\d+) selected$/,'$1 مختارة'],[/^(Draft|In progress|Blueprint ready) · Updated (.+)$/,(m,a,b)=>trs(a)+' · آخر تحديث '+b],[/^Ready · (.+)$/,(m,a)=>'جاهز · '+trs(a)],[/^Works better with (.+)\. You can continue without it\.$/,(m,a)=>'تعمل بشكل أفضل مع '+a.split(', ').map(trs).join('، ')+'. يمكنك المتابعة بدونها.'],[/^What should the (.+) be able to do\?$/,(m,a)=>`ماذا يجب أن يستطيع ${trs(a)} فعله؟`],[/^PHASE (\d+)$/,'المرحلة $1'],[/^Task (\d+) ·$/,'المهمة $1 ·'],[/^Regenerating (.+)\.\.\.$/,(m,a)=>'جارٍ إعادة توليد '+trs(a)+'...'],[/^([✓○]) (.+)$/,(m,a,b)=>a+' '+trs(b)]];
+function trs(s){if(AR[s])return AR[s];for(const[r,f]of RX)if(r.test(s))return s.replace(r,f);if(s.includes(' · '))return s.split(' · ').map(x=>AR[x]||x).join(' · ');return s}
+function tr(r){if(lang!=='ar')return;const w=document.createTreeWalker(r,NodeFilter.SHOW_TEXT),a=[];let n;while(n=w.nextNode())a.push(n);a.forEach(n=>{const s=n.nodeValue.trim();if(!s)return;const x=trs(s);if(x!==s)n.nodeValue=n.nodeValue.replace(s,()=>x)});r.querySelectorAll('[placeholder]').forEach(e=>{const q=e.getAttribute('placeholder');if(AR[q])e.setAttribute('placeholder',AR[q])})}
+function setLang(){lang=lang==='ar'?'en':'ar';ls.s('bk_l',lang);R()}
+
+R();
+</script></body></html>
